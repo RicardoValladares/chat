@@ -5,159 +5,302 @@ import (
 	"net/http"
 	"fmt"
 	"strings"
+	"net/url"
+	"time"
+	"github.com/eiannone/keyboard"	
+	"os/user"
+	"sync"
 )
 
-var saladechat []byte
+var (
+	saladechat []byte
+	urlchat = "http://ravr.webcindario.com/5_chat/consola.php"
+	usuario string
+	mensaje string
+)
+
+
+
+
+
+func routine(command <-chan string, wg *sync.WaitGroup, usuario string) {
+	defer wg.Done()
+	var status = "Play"
+	for {
+		select {
+		case cmd := <-command:
+			//fmt.Println(cmd)
+			switch cmd {
+			case "Stop":
+				return
+			case "Pause":
+				status = "Pause"
+			default:
+				status = "Play"
+			}
+		default:
+			if status == "Play" {
+				
+				
+			
+					texto, haynuevo := Mensajeria(urlchat,"","")
+					if haynuevo {
+						for i:=0; i<(len(usuario) + len(">") + len(mensaje)); i++ {
+							fmt.Print("\b \b")
+						}
+						fmt.Print("\r")
+						fmt.Println(texto)
+						fmt.Printf("%s>", usuario)
+					}
+					
+				
+					
+					time.Sleep(1 * time.Second)
+					
+				
+				
+				
+				
+			}
+		}
+	}
+}
+
+
 
 func main() {
+		
+		
+		//urlchat = "http://ravr.webcindario.com/5_chat/consola.php"
+		
+		user, error1 := user.Current()
+		usuario := user.Username
+		
+		mensaje = ""
+		
+		
+		if ConexionValida(urlchat) && error1==nil {
+			
+			
+			
+			
+			
+			var wg sync.WaitGroup
+			wg.Add(1)
+			command := make(chan string)
+			go routine(command, &wg, usuario)
+			
+			
+
 	
-		
-		
-		//ejecutamos peticionador de caracteres en paralelo
-		//ejecutamos peticionador actualizador de char en paralelo
-		
-		data, haynuevo := DiferenciarChat("http://ravr.webcindario.com/5_chat/consola.php?nombre=&mensaje=")
-		
-		if haynuevo {
-			fmt.Println(data)
+			
+			fmt.Printf("%s>", usuario)
+	
+	
+	
+			if err := keyboard.Open(); err != nil {
+				panic(err)
+			}
+			defer func() {
+				_ = keyboard.Close()
+			}()
+
+			//fmt.Println("Press ESC to quit")
+			for {
+				char, key, err := keyboard.GetKey()
+				if err != nil {
+					panic(err)
+				}
+				if key == 0 {
+					mensaje = mensaje + string(char)
+					fmt.Printf("%c",char)
+				} else if key == keyboard.KeySpace {
+					mensaje = mensaje + " "
+					fmt.Print(" ")
+				} else if key == keyboard.KeyEsc {
+					break
+				} else if key == keyboard.KeyBackspace || key == keyboard.KeyBackspace2 {
+					if len(mensaje) != 0 {
+						mensaje = mensaje[:len(mensaje)-1]
+						fmt.Print("\b \b")
+					}
+					
+				} else if key == keyboard.KeyEnter && len(mensaje)>0 {
+					//salir = true
+					command <- "Pause"
+					
+					/*command <- "Stop"
+					wg.Wait()*/
+					
+					Enviar(urlchat, usuario, mensaje)
+					
+					command <- "Play"
+				}
+			}
+			
+			//KeyEnter
+			
+			//time.Sleep(10 * time.Second)
+			//ejecutamos peticionador de caracteres en paralelo
+			
+		} else {
+			fmt.Println("Conexion Invalida")
 		}
+		
+		
+		
+		
+		
 		
 		
 }
 
-/*
-parsear texto
-package main
 
-import (
-    "fmt"
-    "net/url"
-)
 
-func main() {
-    base, err := url.Parse("http://ravr.webcindario.com/5_chat/servidor.php")
-    if err != nil {
-        return
-    }
 
-    // Query params
-    params := url.Values{}
-    params.Add("nombre", "ricky")
-    params.Add("mensaje", "El niño moreno")
-    base.RawQuery = params.Encode() 
-
-    fmt.Printf("Encoded URL is %q\n", base.String())
-}*/
-
-//true si hubo error o false sin errores
-func ValidarURL(url string) bool {
-	resp, err := http.Get(url) 
-	if err != nil {
-		return true
+func ConexionValida(link string) bool {
+	respuest, errorlink := http.Get(link) 
+	if errorlink != nil {
+		return false
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return true
+	defer respuest.Body.Close()
+	if respuest.StatusCode != 200 {
+		return false
 	}
-	saladechat, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return true
+	saladechat, errorlink = ioutil.ReadAll(respuest.Body)
+	if errorlink != nil {
+		return false
 	}
-	return false
+	return true
 }
 
 
 // retorno las lineas nuevas + true si hay dato, false si no hay nada
-func DiferenciarChat(url string) (string, bool) {
+func Mensajeria(link, nombre, mensaje string) (string, bool) {
 	
-	resp, err := http.Get(url) 
-	if err != nil {
+	linkparseado, error1 := url.Parse(link)
+    if error1 != nil {
+        return "",false
+    }
+    parametros := url.Values{}
+    parametros.Add("nombre", nombre)
+    parametros.Add("mensaje", mensaje)
+    linkparseado.RawQuery = parametros.Encode()
+    
+	
+	respuesta, error2 := http.Get(linkparseado.String()) 
+	if error2 != nil {
 		return "",false
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	defer respuesta.Body.Close()
+	if respuesta.StatusCode != 200 {
 		return "",false
 	}
-	actualizado, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
+	actualizado, error3 := ioutil.ReadAll(respuesta.Body)
+	if error3 != nil {
 		return "",false
 	}
 	
 	//fmt.Println(string(actualizado))
 	
-	old := `46;Bry;Hola
-47;Rick;Bry???
-48;Demo;Prueba de Chat
-49;Ricardo;Ultimo Mensaje
-50;Jorge;Hola`
+	/*old := `52;Jorge;Te caigo?
+53;ricky;El niÃ±o moreno
+54;ricky;El niÃ±o moreno
+55;R;My name is
+56;Ricardo;Hola mundo`*/
+
+//old := ""
 	
 	
-		lineas := strings.Split(string(actualizado) , "\n")
-		lineasold := strings.Split(old , "\n")
-		//lineasold := strings.Split(string(saladechat) , "\n")
+		lineas_nuevas := strings.Split(string(actualizado) , "\n")
+		//lineas_viejas := strings.Split(old , "\n")
+		lineas_viejas := strings.Split(string(saladechat) , "\n")
 		
 		imprimir := false
 		imprimirnada := false
+		
 		i := 0
 		j := 0
+		
 		retorno := ""
 		
-		if 0 != len(string(actualizado)) {
-		
-			for i=0; i<len(lineas); i++ {
-				
-				campos := strings.Split(lineas[i] , ";")
-				
+		if len(string(actualizado)) > 0 {
+			for i=0; i<len(lineas_nuevas); i++ {
+				campos_nuevos := strings.Split(lineas_nuevas[i] , ";")
 				if imprimir==false {
-				for j=0; j<len(lineasold) && imprimir==false; j++ {
-					
-					camposold := strings.Split(lineasold[j] , ";")
-					
-					if campos[0] == camposold[0] {
-						imprimir = true
-						if j == 0 {
-							imprimirnada = true
-						}
-					} 
+					for j=0; j<len(lineas_viejas) && imprimir==false; j++ {
+						campos_viejos := strings.Split(lineas_viejas[j] , ";")
+						if campos_nuevos[0] == campos_viejos[0] {
+							imprimir = true
+							if j == 0 {
+								imprimirnada = true
+							}
+						} 
+					}
+					if imprimirnada == true {
+						break
+					} else if imprimir == true {
+						diferencia := len(lineas_viejas) - j
+						i = diferencia + 1
+					} else if j == len(lineas_viejas) {
+						imprimir=true
+					}				
 				}
-				if imprimirnada == true {
-					break
-				} else if imprimir==true {
-					diferencia := len(lineasold) - j
-					i = diferencia + 1
-					//fmt.Println(i)
-				}				
-				}
-				
 				if imprimir==true {
-					campos = strings.Split(lineas[i] , ";")
-					//fmt.Println(campos[0],"-",campos[1],": ",campos[2])
+					campos_nuevos = strings.Split(lineas_nuevas[i] , ";")
 					if len(retorno) == 0 {
-						retorno = campos[0]+"-"+campos[1]+": "+campos[2]
+						retorno = campos_nuevos[1]+": "+campos_nuevos[2]
 					} else {
-						retorno = retorno +"\n"+campos[0]+"-"+campos[1]+": "+campos[2]
+						retorno = retorno +"\n"+campos_nuevos[1]+": "+campos_nuevos[2]
 					} 
-					
 				}
-				
 			}
-			
-			
 		}
-	
-	if imprimirnada == true {
-		return "",false
-	} else if imprimir==true {
-		return retorno,true
-	} else {
-		return "",false
-	}
-	
-	
-	
-	
-	
 		
+		if imprimirnada == true {
+			return "",false
+		} else if imprimir==true {
+			saladechat = actualizado
+			return retorno,true
+		} else {
+			return "",false
+		}
 }
+
+
+
+
+
+func Enviar(link, nombre, mensaje string) bool {
+	
+	linkparseado, error1 := url.Parse(link)
+    if error1 != nil {
+        return false
+    }
+    parametros := url.Values{}
+    parametros.Add("nombre", nombre)
+    parametros.Add("mensaje", mensaje)
+    linkparseado.RawQuery = parametros.Encode()
+    
+	
+	respuesta, error2 := http.Get(linkparseado.String()) 
+	if error2 != nil {
+		return false
+	}
+	defer respuesta.Body.Close()
+	if respuesta.StatusCode != 200 {
+		return false
+	}
+	_, error3 := ioutil.ReadAll(respuesta.Body)
+	if error3 != nil {
+		return false
+	}
+	return true
+	
+}
+
+
+
+
 
 
