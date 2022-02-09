@@ -96,6 +96,18 @@ func main() {
 			
 			fmt.Printf("%s>", usuario)
 	
+			
+			
+			
+			
+			/*char, key, err := keyboard.GetSingleKey()
+			if (err != nil) {
+			    panic(err)
+			}
+			fmt.Printf("You pressed: rune %q, key %X\r\n", char, key)*/
+			
+			
+			
 	
 	
 			if err := keyboard.Open(); err != nil {
