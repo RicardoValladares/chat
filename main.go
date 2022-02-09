@@ -50,7 +50,7 @@ func routine(command <-chan string, wg *sync.WaitGroup, usuario string) {
 						}
 						fmt.Print("\r")
 						fmt.Println(texto)
-						fmt.Printf("%s>", usuario)
+						fmt.Printf("%s>%s", usuario, mensaje)
 					}
 					
 				
