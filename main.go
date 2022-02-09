@@ -23,7 +23,7 @@ var (
 
 
 
-func routine(command <-chan string, wg *sync.WaitGroup, usuario string) {
+func routine(command <-chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var status = "Play"
 	for {
@@ -74,7 +74,7 @@ func main() {
 		//urlchat = "http://ravr.webcindario.com/5_chat/consola.php"
 		
 		user, error1 := user.Current()
-		usuario := user.Username
+		usuario = user.Username
 		
 		mensaje = ""
 		
@@ -88,7 +88,7 @@ func main() {
 			var wg sync.WaitGroup
 			wg.Add(1)
 			command := make(chan string)
-			go routine(command, &wg, usuario)
+			go routine(command, &wg)
 			
 			
 
