@@ -1,6 +1,7 @@
 
 ### comando
 ```batch
-go install github.com/RicardoValladares/Chat
-go get github.com/RicardoValladares/Chat
+go install github.com/RicardoValladares/Chat@latest
+cd $GOPATH/bin
+./Chat
 ```
