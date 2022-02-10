@@ -76,6 +76,8 @@ func main() {
 		user, error1 := user.Current()
 		usuario = user.Username
 		
+		usuario = strings.Replace(usuario,"\n","\\n",-1)
+		
 		mensaje = ""
 		
 		
@@ -96,18 +98,6 @@ func main() {
 			
 			fmt.Printf("%s>", usuario)
 	
-			
-			
-			
-			
-			/*char, key, err := keyboard.GetSingleKey()
-			if (err != nil) {
-			    panic(err)
-			}
-			fmt.Printf("You pressed: rune %q, key %X\r\n", char, key)*/
-			
-			
-			
 	
 	
 			if err := keyboard.Open(); err != nil {
