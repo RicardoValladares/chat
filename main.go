@@ -28,21 +28,13 @@ func routine(command <-chan string, wg *sync.WaitGroup) {
 	var status = "Play"
 	for {
 		select {
-		case cmd := <-command:
-			//fmt.Println(cmd)
-			switch cmd {
-			case "Stop":
-				return
-			case "Pause":
-				status = "Pause"
+			case cmd := <-command:
+				switch cmd {
+					case "Pause": status = "Pause"
+					default: status = "Play"
+				}
 			default:
-				status = "Play"
-			}
-		default:
-			if status == "Play" {
-				
-				
-			
+				if status == "Play" {
 					texto, haynuevo := Mensajeria()
 					if haynuevo {
 						for i:=0; i<(len(usuario) + len(">") + len(mensaje)); i++ {
@@ -52,16 +44,8 @@ func routine(command <-chan string, wg *sync.WaitGroup) {
 						fmt.Println(texto)
 						fmt.Printf("%s>%s", usuario, mensaje)
 					}
-					
-				
-					
-					time.Sleep(1 * time.Second)
-					
-				
-				
-				
-				
-			}
+					time.Sleep(1 * time.Second)	
+				}
 		}
 	}
 }
