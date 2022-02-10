@@ -43,7 +43,7 @@ func routine(command <-chan string, wg *sync.WaitGroup) {
 				
 				
 			
-					texto, haynuevo := Mensajeria(urlchat,"","")
+					texto, haynuevo := Mensajeria()
 					if haynuevo {
 						for i:=0; i<(len(usuario) + len(">") + len(mensaje)); i++ {
 							fmt.Print("\b \b")
@@ -71,7 +71,6 @@ func routine(command <-chan string, wg *sync.WaitGroup) {
 func main() {
 		
 		
-		//urlchat = "http://ravr.webcindario.com/5_chat/consola.php"
 		
 		user, error1 := user.Current()
 		usuario = user.Username
@@ -134,7 +133,7 @@ func main() {
 					/*command <- "Stop"
 					wg.Wait()*/
 					
-					Enviar(urlchat, usuario, mensaje)
+					Enviar(usuario, mensaje)
 					
 					command <- "Play"
 				}
@@ -161,32 +160,58 @@ func main() {
 
 
 func ConexionValida() bool {
-	respuest, errorlink := http.Get(urlchat) 
-	if errorlink != nil {
+	respuesta, conexionerror := http.Get(urlchat) 
+	if conexionerror != nil {
 		return false
 	}
-	defer respuest.Body.Close()
-	if respuest.StatusCode != 200 {
+	defer respuesta.Body.Close()
+	if respuesta.StatusCode != 200 {
 		return false
 	}
-	saladechat, errorlink = ioutil.ReadAll(respuest.Body)
-	if errorlink != nil {
+	_, conexionerror = ioutil.ReadAll(respuesta.Body)
+	if conexionerror != nil {
 		return false
 	}
 	return true
 }
 
 
+func Enviar(nombre, mensaje string) bool {
+	linkparseado, error1 := url.Parse(urlchat)
+	if error1 != nil {
+		return false
+	}
+	parametros := url.Values{}
+	parametros.Add("nombre", nombre)
+	parametros.Add("mensaje", mensaje)
+	linkparseado.RawQuery = parametros.Encode()
+	respuesta, error2 := http.Get(linkparseado.String()) 
+	if error2 != nil {
+		return false
+	}
+	defer respuesta.Body.Close()
+	if respuesta.StatusCode != 200 {
+		return false
+	}
+	_, error3 := ioutil.ReadAll(respuesta.Body)
+	if error3 != nil {
+		return false
+	}
+	return true
+}
+
+
+
 // retorno las lineas nuevas + true si hay dato, false si no hay nada
-func Mensajeria(link, nombre, mensaje string) (string, bool) {
+func Mensajeria() (string, bool) {
 	
-	linkparseado, error1 := url.Parse(link)
+	linkparseado, error1 := url.Parse(urlchat)
     if error1 != nil {
         return "",false
     }
     parametros := url.Values{}
-    parametros.Add("nombre", nombre)
-    parametros.Add("mensaje", mensaje)
+    parametros.Add("nombre", "")
+    parametros.Add("mensaje", "")
     linkparseado.RawQuery = parametros.Encode()
     
 	
@@ -240,6 +265,7 @@ func Mensajeria(link, nombre, mensaje string) (string, bool) {
 						imprimir=true
 					}				
 				}
+				
 				if imprimir==true {
 					campos_nuevos = strings.Split(lineas_nuevas[i] , ";")
 					if len(retorno) == 0 {
@@ -248,6 +274,7 @@ func Mensajeria(link, nombre, mensaje string) (string, bool) {
 						retorno = retorno +"\n"+campos_nuevos[1]+": "+campos_nuevos[2]
 					} 
 				}
+
 			}
 		}
 		
@@ -259,38 +286,6 @@ func Mensajeria(link, nombre, mensaje string) (string, bool) {
 		} else {
 			return "",false
 		}
-}
-
-
-
-
-
-func Enviar(link, nombre, mensaje string) bool {
-	
-	linkparseado, error1 := url.Parse(link)
-    if error1 != nil {
-        return false
-    }
-    parametros := url.Values{}
-    parametros.Add("nombre", nombre)
-    parametros.Add("mensaje", mensaje)
-    linkparseado.RawQuery = parametros.Encode()
-    
-	
-	respuesta, error2 := http.Get(linkparseado.String()) 
-	if error2 != nil {
-		return false
-	}
-	defer respuesta.Body.Close()
-	if respuesta.StatusCode != 200 {
-		return false
-	}
-	_, error3 := ioutil.ReadAll(respuesta.Body)
-	if error3 != nil {
-		return false
-	}
-	return true
-	
 }
 
 
