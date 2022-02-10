@@ -133,7 +133,13 @@ func main() {
 					/*command <- "Stop"
 					wg.Wait()*/
 					
-					Enviar(usuario, mensaje)
+					for {
+						if Enviar(usuario, mensaje) {
+							break;
+						} else {
+							time.Sleep(1 * time.Second)
+						}
+					}
 					
 					command <- "Play"
 				}
