@@ -81,7 +81,7 @@ func main() {
 		mensaje = ""
 		
 		
-		if ConexionValida(urlchat) && error1==nil {
+		if ConexionValida() && error1==nil {
 			
 			
 			
@@ -160,8 +160,8 @@ func main() {
 
 
 
-func ConexionValida(link string) bool {
-	respuest, errorlink := http.Get(link) 
+func ConexionValida() bool {
+	respuest, errorlink := http.Get(urlchat) 
 	if errorlink != nil {
 		return false
 	}
