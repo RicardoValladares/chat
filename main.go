@@ -203,15 +203,7 @@ func Mensajeria(link, nombre, mensaje string) (string, bool) {
 		return "",false
 	}
 	
-	//fmt.Println(string(actualizado))
-	
-	/*old := `52;Jorge;Te caigo?
-53;ricky;El niÃ±o moreno
-54;ricky;El niÃ±o moreno
-55;R;My name is
-56;Ricardo;Hola mundo`*/
 
-//old := ""
 	
 	
 		lineas_nuevas := strings.Split(string(actualizado) , "\n")
