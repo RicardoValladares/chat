@@ -36,10 +36,12 @@ function AJAX($nombre, $mensaje){
 	$caracteres = "";
 	foreach ($chat as $dato){
 		if($i == 0){
-			$caracteres = preg_replace("/\r|\n/", "-n", $dato[0]);
+			$parseado = preg_replace("/\r|\n/", "-n", $dato[0]);
+			$caracteres = preg_replace('/<[^>]*>/', ' ', $parseado);
 		}
 		else{
-			$caracteres = preg_replace("/\r|\n/", "-n", $dato[0]) ."\n". $caracteres;
+			$parseado = preg_replace("/\r|\n/", "-n", $dato[0]);
+			$caracteres = preg_replace('/<[^>]*>/', ' ', $parseado) ."\n". $caracteres;
 		}
 		$i = $i+1;
 	}
