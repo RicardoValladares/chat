@@ -1,154 +1,137 @@
 package main
 
 import (
-	"io/ioutil"
-	"net/http"
+	"github.com/eiannone/keyboard"	
 	"fmt"
 	"strings"
+	"net/http"
 	"net/url"
-	"time"
-	"github.com/eiannone/keyboard"	
+	"io/ioutil"
 	"os/user"
+	"time"
 	"sync"
 )
 
 var (
-	saladechat []byte
 	urlchat = "http://ravr.webcindario.com/5_chat/consola.php"
 	usuario string
 	mensaje string
+	saladechat []byte
 )
 
 
+func main() {
+	user, errorfatal := user.Current()
+	usuario = user.Username //Usuario del Sistema Operativo
+	mensaje = ""			//Mensaje escrito desde Consola
+	if ConexionValida() && errorfatal==nil {
+			
+		/* Ejecutamos Go Rutina, proceso en paralelo */
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go_comando := make(chan string)
+		go Routine(go_comando, &wg)
+		
+		/* Verificamos podemos obtener peticiones desde consola */
+		if errorteclado := keyboard.Open(); errorteclado != nil {
+			fmt.Println("No se logro obtener peticionador desde consola")
+			return
+		}
+		defer func() {
+			keyboard.Close()
+		}()
+
+		/* Mostramos el peticionador de mensajes */
+		fmt.Printf("%s>", usuario)
+
+		for {
+			caracter, tecla, errorteclado := keyboard.GetKey() //obtenemos un pulso a la vez
+			/* Error del peticionador desde consola */
+			if errorteclado != nil {
+				fmt.Println("Se obtuvo error del peticionador de consola")
+				go_comando <- "Detener"
+				wg.Wait()
+				break
+			}
+			/* Si es un caracter el pulso desde teclado, lo agregamos al mensaje */
+			if tecla == 0 {
+				mensaje = mensaje + string(caracter)
+				fmt.Printf("%c",caracter)
+			/* Si es un espacio en blanco la tecla pulsada, agregamos espacio al mensaje */
+			} else if tecla == keyboard.KeySpace {
+				mensaje = mensaje + " "
+				fmt.Print(" ")
+			/* Si la tecla Esc es pulsada, nos salimos de la aplicacion */
+			} else if tecla == keyboard.KeyEsc {
+				go_comando <- "Detener"
+				wg.Wait()
+				break
+			/* Si la peticion es borrar caracter, lo borramos del mensaje */
+			} else if tecla == keyboard.KeyBackspace || tecla == keyboard.KeyBackspace2 {
+				if len(mensaje) != 0 {
+					mensaje = mensaje[:len(mensaje)-1]
+					fmt.Print("\b \b")
+				}
+			/* Si la tecla Enter es pulsada y hay mensaje escrito, se envia el mensaje */
+			} else if tecla == keyboard.KeyEnter && len(mensaje)>0 {
+				go_comando <- "Pausar" //Pausamos el actualizador de mensajes
+				/* Solicitamos el envio de mensaje hasta que se logre enviar */
+				for {
+					if Enviar(usuario, mensaje) {
+						mensaje = ""
+						break;
+					} else {
+						time.Sleep(1 * time.Second)
+					}
+				}
+				go_comando <- "Iniciar" //Retomamos el actualizador de mensajes
+			}
+		}
+
+	} else {
+		fmt.Println("No se logro conectar a:",urlchat)
+	}
+}
 
 
 
-func routine(command <-chan string, wg *sync.WaitGroup) {
+/* Actualizacion de sala de chat en paralelo */
+func Routine(go_comando <-chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var status = "Play"
+	var status = "Iniciar"
 	for {
 		select {
-			case cmd := <-command:
+			case cmd := <-go_comando:
 				switch cmd {
-					case "Pause": status = "Pause"
-					default: status = "Play"
+					case "Detener": return //cancela la actualizacion de mensajeria
+					case "Pausar": status = "Pausar" //pausa las actualizacion de mensajeria
+					default: status = "Iniciar" //ejecuta nuevamente las actualizaciones de mensajeria
 				}
+			break
 			default:
-				if status == "Play" {
-					texto, haynuevo := Mensajeria()
+				if status == "Iniciar" {
+					texto, haynuevo := Mensajeria() //verfica hay mensajes nuevos
 					if haynuevo {
+						/* borramos la linea en la que esta escribiendo */
 						for i:=0; i<(len(usuario) + len(">") + len(mensaje)); i++ {
 							fmt.Print("\b \b")
 						}
 						fmt.Print("\r")
+						/* mostrmos los nuevos mensajes */
 						fmt.Println(texto)
-						fmt.Printf("%s>%s", usuario, mensaje)
+						/* mostramos nuevamente el peticionador de mensajes con el mensaje que estaba escribiendo */
+						fmt.Printf("%s> %s", usuario, mensaje)
 					}
-					time.Sleep(1 * time.Second)	
+					time.Sleep(1000 * time.Millisecond) //actualizamos la mensajeria a cada segundo	
 				}
+			break
 		}
 	}
 }
 
 
 
-func main() {
-		
-		
-		
-		user, error1 := user.Current()
-		usuario = user.Username
-		
-		usuario = strings.Replace(usuario,"\n","\\n",-1)
-		
-		mensaje = ""
-		
-		
-		if ConexionValida() && error1==nil {
-			
-			
-			
-			
-			
-			var wg sync.WaitGroup
-			wg.Add(1)
-			command := make(chan string)
-			go routine(command, &wg)
-			
-			
-
-	
-			
-			fmt.Printf("%s>", usuario)
-	
-	
-	
-			if err := keyboard.Open(); err != nil {
-				panic(err)
-			}
-			defer func() {
-				_ = keyboard.Close()
-			}()
-
-			//fmt.Println("Press ESC to quit")
-			for {
-				char, key, err := keyboard.GetKey()
-				if err != nil {
-					panic(err)
-				}
-				if key == 0 {
-					mensaje = mensaje + string(char)
-					fmt.Printf("%c",char)
-				} else if key == keyboard.KeySpace {
-					mensaje = mensaje + " "
-					fmt.Print(" ")
-				} else if key == keyboard.KeyEsc {
-					break
-				} else if key == keyboard.KeyBackspace || key == keyboard.KeyBackspace2 {
-					if len(mensaje) != 0 {
-						mensaje = mensaje[:len(mensaje)-1]
-						fmt.Print("\b \b")
-					}
-					
-				} else if key == keyboard.KeyEnter && len(mensaje)>0 {
-					//salir = true
-					command <- "Pause"
-					
-					/*command <- "Stop"
-					wg.Wait()*/
-					
-					for {
-						if Enviar(usuario, mensaje) {
-							break;
-						} else {
-							time.Sleep(1 * time.Second)
-						}
-					}
-					
-					command <- "Play"
-				}
-			}
-			
-			//KeyEnter
-			
-			//time.Sleep(10 * time.Second)
-			//ejecutamos peticionador de caracteres en paralelo
-			
-		} else {
-			fmt.Println("Conexion Invalida")
-		}
-		
-		
-		
-		
-		
-		
-		
-}
-
-
-
-
+/* Valida si la conexion funciona correctamente */
 func ConexionValida() bool {
 	respuesta, conexionerror := http.Get(urlchat) 
 	if conexionerror != nil {
@@ -162,124 +145,182 @@ func ConexionValida() bool {
 	if conexionerror != nil {
 		return false
 	}
-	return true
+	return true //retorna que hay conexion al servidor de chat
 }
 
 
-func Enviar(nombre, mensaje string) bool {
-	linkparseado, error1 := url.Parse(urlchat)
-	if error1 != nil {
+
+/* Envia mensajes al chat y valida se haya enviado */
+func Enviar(usuario, mensaje string) bool {
+	linkparseado, conexionerror := url.Parse(urlchat)
+	if conexionerror != nil {
 		return false
 	}
 	parametros := url.Values{}
-	parametros.Add("nombre", nombre)
+	parametros.Add("nombre", usuario)
 	parametros.Add("mensaje", mensaje)
 	linkparseado.RawQuery = parametros.Encode()
-	respuesta, error2 := http.Get(linkparseado.String()) 
-	if error2 != nil {
+	respuesta, conexionerror := http.Get(linkparseado.String()) 
+	if conexionerror != nil {
 		return false
 	}
 	defer respuesta.Body.Close()
 	if respuesta.StatusCode != 200 {
 		return false
 	}
-	_, error3 := ioutil.ReadAll(respuesta.Body)
-	if error3 != nil {
+	actualizado, conexionerror := ioutil.ReadAll(respuesta.Body)
+	if conexionerror != nil {
 		return false
 	}
-	return true
-}
 
+	lineas_nuevas := strings.Split(string(actualizado) , "\n")
+	lineas_viejas := strings.Split(string(saladechat) , "\n")
+	imprimir := false
+	exactamente_iguales := false
+	i := 0
+	j := 0
+	retorno := ""
+	if len(string(actualizado)) > 0 {
+		for i=0; i<len(lineas_nuevas) /*&& imprimir==false*/; i++ {
+			campos_nuevos := strings.Split(lineas_nuevas[i] , ";")
 
-
-// retorno las lineas nuevas + true si hay dato, false si no hay nada
-func Mensajeria() (string, bool) {
-	
-	linkparseado, error1 := url.Parse(urlchat)
-    if error1 != nil {
-        return "",false
-    }
-    parametros := url.Values{}
-    parametros.Add("nombre", "")
-    parametros.Add("mensaje", "")
-    linkparseado.RawQuery = parametros.Encode()
-    
-	
-	respuesta, error2 := http.Get(linkparseado.String()) 
-	if error2 != nil {
-		return "",false
-	}
-	defer respuesta.Body.Close()
-	if respuesta.StatusCode != 200 {
-		return "",false
-	}
-	actualizado, error3 := ioutil.ReadAll(respuesta.Body)
-	if error3 != nil {
-		return "",false
-	}
-	
-
-	
-	
-		lineas_nuevas := strings.Split(string(actualizado) , "\n")
-		//lineas_viejas := strings.Split(old , "\n")
-		lineas_viejas := strings.Split(string(saladechat) , "\n")
-		
-		imprimir := false
-		imprimirnada := false
-		
-		i := 0
-		j := 0
-		
-		retorno := ""
-		
-		if len(string(actualizado)) > 0 {
-			for i=0; i<len(lineas_nuevas); i++ {
-				campos_nuevos := strings.Split(lineas_nuevas[i] , ";")
-				if imprimir==false {
-					for j=0; j<len(lineas_viejas) && imprimir==false; j++ {
-						campos_viejos := strings.Split(lineas_viejas[j] , ";")
-						if campos_nuevos[0] == campos_viejos[0] {
-							imprimir = true
-							if j == 0 {
-								imprimirnada = true
-							}
-						} 
-					}
-					if imprimirnada == true {
-						break
-					} else if imprimir == true {
-						diferencia := len(lineas_viejas) - j
-						i = diferencia + 1
-					} else if j == len(lineas_viejas) {
-						imprimir=true
-					}				
-				}
-				
-				if imprimir==true {
-					campos_nuevos = strings.Split(lineas_nuevas[i] , ";")
-					if len(retorno) == 0 {
-						retorno = campos_nuevos[1]+": "+campos_nuevos[2]
-					} else {
-						retorno = retorno +"\n"+campos_nuevos[1]+": "+campos_nuevos[2]
+			if imprimir==false {
+				/* validamos si ya tenemos los mensajes actualizados */
+				for j=0; j<len(lineas_viejas) && imprimir==false; j++ {
+					campos_viejos := strings.Split(lineas_viejas[j] , ";")
+					if campos_nuevos[0] == campos_viejos[0] {
+						imprimir = true
+						if j == 0 {
+							/* la mensajeria en la nube y la local son exactamente iguales */
+							exactamente_iguales = true 
+						}
 					} 
 				}
-
+				/* si ambas mensajeria son exactamente iguales terminamos de comparar */
+				if exactamente_iguales == true {
+					break
+				/* si son similares, determinamos las diferencias para imprimirlas */
+				} else if imprimir == true {
+					diferencia := len(lineas_viejas) - j
+					i = diferencia + 1
+				/* si no hay nada igual, imprimimos toda la mensajeria de la nube */
+				} else if j == len(lineas_viejas) {
+					imprimir=true
+				}				
 			}
+			
+			/* generamos el string a imprimir */
+			if imprimir==true {
+				campos_nuevos = strings.Split(lineas_nuevas[i] , ";")
+				if len(retorno) == 0 {
+					retorno = campos_nuevos[1]+": "+campos_nuevos[2]
+				} else {
+					retorno = retorno +"\n"+campos_nuevos[1]+": "+campos_nuevos[2]
+				} 
+			}
+
 		}
-		
-		if imprimirnada == true {
-			return "",false
-		} else if imprimir==true {
-			saladechat = actualizado
-			return retorno,true
-		} else {
-			return "",false
+	}
+	
+	/* si la mensajeria local no es exactamente igual a la existente en la nube, entonces imprimiremos los nuevos mensajes */
+	if exactamente_iguales == false && imprimir==true {
+		/* borramos la linea en la que estaba el mensaje que enviamos */
+		for i:=0; i<(len(usuario) + len("> ") + len(mensaje)); i++ {
+			fmt.Print("\b \b")
 		}
+		fmt.Print("\r")
+		/* mostramos los mensajes nuevos */
+		fmt.Println(retorno)
+		/* mostramos nuevamente el peticionador de mensajes */
+		fmt.Printf("%s> ", usuario)
+		/* actualizamos la sala de chat local */
+		saladechat = actualizado
+		return true //retornamos que el mensaje se envio exitosamente
+	} else {
+		return false
+	}
+
 }
 
 
 
+/* Retorna Mensajes nuevos y si existen mensajes */
+func Mensajeria() (string, bool) {
+	linkparseado, conexionerror := url.Parse(urlchat)
+	if conexionerror != nil {
+		return "",false
+	}
+	parametros := url.Values{}
+	parametros.Add("nombre", "")
+	parametros.Add("mensaje", "")
+	linkparseado.RawQuery = parametros.Encode()
+	respuesta, conexionerror := http.Get(linkparseado.String()) 
+	if conexionerror != nil {
+		return "",false
+	}
+	defer respuesta.Body.Close()
+	if respuesta.StatusCode != 200 {
+		return "",false
+	}
+	actualizado, conexionerror := ioutil.ReadAll(respuesta.Body)
+	if conexionerror != nil {
+		return "",false
+	}
 
+	lineas_nuevas := strings.Split(string(actualizado) , "\n")
+	lineas_viejas := strings.Split(string(saladechat) , "\n")
+	imprimir := false
+	exactamente_iguales := false
+	i := 0
+	j := 0
+	retorno := ""
+	if len(string(actualizado)) > 0 {
+		for i=0; i<len(lineas_nuevas) /*&& imprimir==false*/; i++ {
+			campos_nuevos := strings.Split(lineas_nuevas[i] , ";")
 
+			if imprimir==false {
+				/* validamos si ya tenemos los mensajes actualizados */
+				for j=0; j<len(lineas_viejas) && imprimir==false; j++ {
+					campos_viejos := strings.Split(lineas_viejas[j] , ";")
+					if campos_nuevos[0] == campos_viejos[0] {
+						imprimir = true
+						if j == 0 {
+							/* la mensajeria en la nube y la local son exactamente iguales */
+							exactamente_iguales = true 
+						}
+					} 
+				}
+				/* si ambas mensajeria son exactamente iguales terminamos de comparar */
+				if exactamente_iguales == true {
+					break
+				/* si son similares, determinamos las diferencias para imprimirlas */
+				} else if imprimir == true {
+					diferencia := len(lineas_viejas) - j
+					i = diferencia + 1
+				/* si no hay nada igual, imprimimos toda la mensajeria de la nube */
+				} else if j == len(lineas_viejas) {
+					imprimir=true
+				}				
+			}
+			
+			/* generamos el string a imprimir */
+			if imprimir==true {
+				campos_nuevos = strings.Split(lineas_nuevas[i] , ";")
+				if len(retorno) == 0 {
+					retorno = campos_nuevos[1]+": "+campos_nuevos[2]
+				} else {
+					retorno = retorno +"\n"+campos_nuevos[1]+": "+campos_nuevos[2]
+				} 
+			}
 
+		}
+	}
+	
+	/* si la mensajeria local no es exactamente igual a la existente en la nube, entonces imprimiremos los nuevos mensajes */
+	if exactamente_iguales == false && imprimir==true {
+		saladechat = actualizado
+		return retorno, true //retornamos que los mensajes nuevos y que si existen mensajes nuevos
+	} else {
+		return "", false //retornamos que no hay mensajes nuevos
+	}
+}
