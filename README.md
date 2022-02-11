@@ -1,5 +1,5 @@
+![Captura de Pantalla chat](https://github.com/RicardoValladares/chat/releases/download/3.0/chat.png)
 
-https://github.com/RicardoValladares/chat/releases/download/3.0/chat.png
 
 ### Comandos para: Windows
 ```batch
