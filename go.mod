@@ -1,4 +1,4 @@
-module github.com/RicardoValladares/Chat
+module github.com/RicardoValladares/chat
 
 go 1.17
 
