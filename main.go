@@ -24,7 +24,7 @@ func main() {
 	user, errorfatal := user.Current()
 	usuario = user.Username //Usuario del Sistema Operativo
 	mensaje = ""			//Mensaje escrito desde Consola
-	if ConexionValida() && errorfatal==nil {
+	if ConexionValida() && errorfatal == nil {
 			
 		/* Ejecutamos Go Rutina, proceso en paralelo */
 		var wg sync.WaitGroup
@@ -73,7 +73,7 @@ func main() {
 					fmt.Print("\b \b")
 				}
 			/* Si la tecla Enter es pulsada y hay mensaje escrito, se envia el mensaje */
-			} else if tecla == keyboard.KeyEnter && len(mensaje)>0 {
+			} else if tecla == keyboard.KeyEnter && len(mensaje) > 0 {
 				go_comando <- "Pausar" //Pausamos el actualizador de mensajes
 				/* Solicitamos el envio de mensaje hasta que se logre enviar */
 				for {
@@ -113,7 +113,7 @@ func Routine(go_comando <-chan string, wg *sync.WaitGroup) {
 					texto, haynuevo := Mensajeria() //verfica hay mensajes nuevos
 					if haynuevo {
 						/* borramos la linea en la que esta escribiendo */
-						for i:=0; i<(len(usuario) + len(">") + len(mensaje)); i++ {
+						for i := 0; i < (len(usuario) + len(">") + len(mensaje)); i++ {
 							fmt.Print("\b \b")
 						}
 						fmt.Print("\r")
@@ -181,12 +181,12 @@ func Enviar(usuario, mensaje string) bool {
 	j := 0
 	retorno := ""
 	if len(string(actualizado)) > 0 {
-		for i=0; i<len(lineas_nuevas) /*&& imprimir==false*/; i++ {
+		for i = 0; i < len(lineas_nuevas) /*&& imprimir==false*/; i++ {
 			campos_nuevos := strings.Split(lineas_nuevas[i] , ";")
 
-			if imprimir==false {
+			if imprimir == false {
 				/* validamos si ya tenemos los mensajes actualizados */
-				for j=0; j<len(lineas_viejas) && imprimir==false; j++ {
+				for j = 0; j < len(lineas_viejas) && imprimir == false; j++ {
 					campos_viejos := strings.Split(lineas_viejas[j] , ";")
 					if campos_nuevos[0] == campos_viejos[0] {
 						imprimir = true
@@ -210,12 +210,12 @@ func Enviar(usuario, mensaje string) bool {
 			}
 			
 			/* generamos el string a imprimir */
-			if imprimir==true {
+			if imprimir == true {
 				campos_nuevos = strings.Split(lineas_nuevas[i] , ";")
 				if len(retorno) == 0 {
 					retorno = campos_nuevos[1]+": "+campos_nuevos[2]
 				} else {
-					retorno = retorno +"\n"+campos_nuevos[1]+": "+campos_nuevos[2]
+					retorno = retorno + "\n" + campos_nuevos[1] + ": " + campos_nuevos[2]
 				} 
 			}
 
@@ -223,9 +223,9 @@ func Enviar(usuario, mensaje string) bool {
 	}
 	
 	/* si la mensajeria local no es exactamente igual a la existente en la nube, entonces imprimiremos los nuevos mensajes */
-	if exactamente_iguales == false && imprimir==true {
+	if exactamente_iguales == false && imprimir == true {
 		/* borramos la linea en la que estaba el mensaje que enviamos */
-		for i:=0; i<(len(usuario) + len("> ") + len(mensaje)); i++ {
+		for i = 0; i < (len(usuario) + len("> ") + len(mensaje)); i++ {
 			fmt.Print("\b \b")
 		}
 		fmt.Print("\r")
@@ -275,12 +275,12 @@ func Mensajeria() (string, bool) {
 	j := 0
 	retorno := ""
 	if len(string(actualizado)) > 0 {
-		for i=0; i<len(lineas_nuevas) /*&& imprimir==false*/; i++ {
+		for i = 0; i < len(lineas_nuevas) /*&& imprimir==false*/; i++ {
 			campos_nuevos := strings.Split(lineas_nuevas[i] , ";")
 
-			if imprimir==false {
+			if imprimir == false {
 				/* validamos si ya tenemos los mensajes actualizados */
-				for j=0; j<len(lineas_viejas) && imprimir==false; j++ {
+				for j = 0; j < len(lineas_viejas) && imprimir == false; j++ {
 					campos_viejos := strings.Split(lineas_viejas[j] , ";")
 					if campos_nuevos[0] == campos_viejos[0] {
 						imprimir = true
@@ -304,12 +304,12 @@ func Mensajeria() (string, bool) {
 			}
 			
 			/* generamos el string a imprimir */
-			if imprimir==true {
+			if imprimir == true {
 				campos_nuevos = strings.Split(lineas_nuevas[i] , ";")
 				if len(retorno) == 0 {
 					retorno = campos_nuevos[1]+": "+campos_nuevos[2]
 				} else {
-					retorno = retorno +"\n"+campos_nuevos[1]+": "+campos_nuevos[2]
+					retorno = retorno + "\n" + campos_nuevos[1] + ": " + campos_nuevos[2]
 				} 
 			}
 
@@ -317,7 +317,7 @@ func Mensajeria() (string, bool) {
 	}
 	
 	/* si la mensajeria local no es exactamente igual a la existente en la nube, entonces imprimiremos los nuevos mensajes */
-	if exactamente_iguales == false && imprimir==true {
+	if exactamente_iguales == false && imprimir == true {
 		saladechat = actualizado
 		return retorno, true //retornamos que los mensajes nuevos y que si existen mensajes nuevos
 	} else {
