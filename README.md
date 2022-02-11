@@ -1,4 +1,6 @@
 
+https://github.com/RicardoValladares/chat/releases/download/3.0/chat.png
+
 ### Comandos para: Windows
 ```batch
 go get github.com/RicardoValladares/chat
