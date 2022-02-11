@@ -1,4 +1,4 @@
-<img align="left" src="https://github.com/RicardoValladares/chat/releases/download/3.0/chat.png">
+<img align="left" src="https://github.com/RicardoValladares/chat/releases/download/3.0/chatwin.png">
 
 ### Comandos para: Windows
 ```batch
