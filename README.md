@@ -11,6 +11,7 @@ chat.exe
 ```
 <br>
 <br>
+<br>
 
 <img align="left" src="https://github.com/RicardoValladares/chat/releases/download/3.0/chat.png">
 
