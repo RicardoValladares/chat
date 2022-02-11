@@ -1,4 +1,4 @@
-<img align="left" width="600" height="200" src="https://github.com/RicardoValladares/chat/releases/download/3.0/chat.png">
+<img align="center" src="https://github.com/RicardoValladares/chat/releases/download/3.0/chat.png">
 <center>
 ![Captura de Pantalla chat](https://github.com/RicardoValladares/chat/releases/download/3.0/chat.png)
 </center>
