@@ -1,4 +1,4 @@
-### chat
+### chat modo consola hecho en GO y PHP
 <hr>
 
 <img align="left" src="https://github.com/RicardoValladares/chat/releases/download/3.0/chatwin.png">
