@@ -1,4 +1,4 @@
-### Chat modo consola hecho en GO y PHP(https://github.com/RicardoValladares/AJAX):
+### Chat modo consola hecho en GO y PHP(https://github.com/RicardoValladares/AJAX)
 <hr>
 
 <img align="left" src="https://github.com/RicardoValladares/chat/releases/download/3.0/chatwin.png">
