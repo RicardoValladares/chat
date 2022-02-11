@@ -1,5 +1,5 @@
+
 <h1>Chat</h1>
-<hr>
 
 <img align="left" src="https://github.com/RicardoValladares/chat/releases/download/3.0/chatwin.png">
 
