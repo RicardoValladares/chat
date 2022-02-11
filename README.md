@@ -1,5 +1,5 @@
 
-hat
+<h2>chat</h2>
 
 <img align="left" src="https://github.com/RicardoValladares/chat/releases/download/3.0/chatwin.png">
 
