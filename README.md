@@ -1,8 +1,10 @@
+```
 ****************************
 *                          *
 *        Go> chat_         *
 *                          *
 ****************************
+```
 
 ### Chat modo consola hecho en GO y PHP(https://github.com/RicardoValladares/AJAX)
 <hr>
