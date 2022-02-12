@@ -1,3 +1,4 @@
+### Chat modo consola hecho en GO y PHP(https://github.com/RicardoValladares/AJAX)
 ```
 Go: ****************************
 Go: *                          *
@@ -7,7 +8,6 @@ Go: ****************************
 Go> Hola_
 ```
 
-### Chat modo consola hecho en GO y PHP(https://github.com/RicardoValladares/AJAX)
 <hr>
 
 ### Comandos para: Windows
