@@ -1,5 +1,3 @@
-https://drive.google.com/file/d/1TjWYWkzlwW2BGmWRbVgqSJOoFPpyLZZJ/view?usp=sharing
-
 ### Chat modo consola hecho en GO y PHP(https://github.com/RicardoValladares/AJAX)
 ```
 Go: ****************************
