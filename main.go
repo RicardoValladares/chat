@@ -324,3 +324,4 @@ func Mensajeria() (string, bool) {
 		return "", false //retornamos que no hay mensajes nuevos
 	}
 }
+
