@@ -10,14 +10,14 @@ Go> Hola_
 
 <hr>
 
-### Comandos para: Windows
+### Comandos para: Windows (usando Go)
 ```batch
 go get github.com/RicardoValladares/chat
 cd %GOPATH%/bin
 chat.exe
 ```
 
-### Comandos para: BSD, Linux y Mac
+### Comandos para: BSD, Linux y Mac (usando Go)
 ```bash
 go get github.com/RicardoValladares/chat
 cd $GOPATH/bin
